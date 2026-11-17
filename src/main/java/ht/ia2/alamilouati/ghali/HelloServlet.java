@@ -1,4 +1,4 @@
-package ma.emsi.alamilouati.ghali.tp3web;
+package ht.ia2.alamilouati.ghali;
 
 import java.io.IOException;
 import java.io.PrintWriter;
