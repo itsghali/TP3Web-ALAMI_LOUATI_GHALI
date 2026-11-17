@@ -45,6 +45,7 @@ Si `GEMINI_KEY` a été définie après le démarrage de Payara, redémarrer le 
 - Le rôle choisi est ajouté comme `SystemMessage` avant la première question. Il reste figé pendant la conversation.
 - **Nouveau chat** ouvre une nouvelle vue, recrée les beans et permet de choisir un autre rôle.
 - La sérialisation du client conserve les messages ; les objets techniques et la clé ne sont pas sérialisés.
+- Le compteur de tokens est un bean CDI de portée session, partagé par le client LLM et le backing bean. Il cumule l’usage déclaré par Gemini, même après un changement de rôle ou **Nouveau chat** ; une autre session a son propre total.
 - La page, la feuille de style et le JavaScript reprennent les [sources du TP0](http://richard.grin.free.fr/emsi/casablanca-ia/tp/tp0-jakartaee/correction/page.html), sans mode debug.
 
 ## Vérifier
@@ -63,12 +64,12 @@ Pour les contrôles avec le vrai modèle, qui consomment des tokens de l’API :
 ./scripts/Test-Web.ps1 -WithGemini
 ```
 
-La validation complète a réussi : **16 contrôles**, dont traduction de « bonjour », rôle personnalisé, mémoire entre deux échanges et remise à zéro après **Nouveau chat**. Les questions de test utilisent uniquement des données fictives.
+La validation complète a réussi : **24 contrôles**, dont traduction de « bonjour », rôle personnalisé, mémoire entre deux échanges, remise à zéro après **Nouveau chat**, cumul réel des tokens et isolation entre sessions. Les questions de test utilisent uniquement des données fictives.
 
 La compilation seule s’effectue avec `./mvnw.cmd package` lorsque `JAVA_HOME` pointe vers le JDK 25.
 
 ## Périmètre et rendu
 
-La partie obligatoire du TP2 Web est implémentée. Le comptage des tokens et le streaming WebSocket sont des exercices optionnels distincts.
+La partie obligatoire du TP2 Web et l’option de comptage des tokens sont implémentées. Le streaming WebSocket est une autre option.
 
 Pour demander le bonus, l’énoncé prévoit un email au professeur contenant l’URL du dépôt, avec « TP 2 - Web terminé » dans le sujet. Aucun email n’est envoyé par les scripts du projet.

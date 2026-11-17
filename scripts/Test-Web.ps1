@@ -19,6 +19,12 @@ function Read-TextArea([string]$Html, [string]$Id) {
     return [System.Net.WebUtility]::HtmlDecode($match.Groups[1].Value).Trim()
 }
 
+function Read-Tokens([string]$Html) {
+    $match = [regex]::Match($Html, '<span\b[^>]*id="form:nombreTokens"[^>]*>[^<]*?([0-9]+)</span>')
+    if (-not $match.Success) { throw 'Compteur de tokens absent' }
+    return [long]$match.Groups[1].Value
+}
+
 function Assert-Check([bool]$Condition, [string]$Label) {
     if (-not $Condition) { throw "ECHEC : $Label" }
     $results.Add($Label)
@@ -57,6 +63,7 @@ $page = Get-Page
 Assert-Check ($page -match 'jakarta.faces.ViewState') 'Accueil traite par JSF'
 Assert-Check ($page -match 'form:rolesysteme') 'Liste des roles presente'
 Assert-Check ($page -notmatch '(?i)mode debug|bb\.debug') 'Interface sans mode debug'
+Assert-Check ((Read-Tokens $page) -eq 0) 'Compteur initial a zero'
 
 foreach ($resource in @('css/mycsslayout.css', 'js/script.js')) {
     $encodedName = [regex]::Escape($resource)
@@ -75,6 +82,7 @@ Assert-Check ($page -match 'Vous devez indiquer le r.le') 'Role obligatoire'
 $page = Send-Form $page 'Envoyer la question' '' $assistantRole 'Assistant'
 Assert-Check ($page -match 'Il manque le texte de la question') 'Question vide refusee'
 Assert-Check ((Read-TextArea $page 'form:conversation') -eq '') 'Validation sans ajout a la conversation'
+Assert-Check ((Read-Tokens $page) -eq 0) 'Validation sans consommation de tokens'
 
 if ($WithGemini) {
     $page = Get-Page
@@ -87,21 +95,32 @@ if ($WithGemini) {
     Assert-Check ($answer -match '(?i)\bhello\b|\bhi\b|good (morning|day)') 'Gemini traduit bonjour en anglais'
     Assert-Check ($page -match '<select\b[^>]*id="form:rolesysteme_input"[^>]*disabled') 'Role fige apres premiere reponse'
     Assert-Check ((Read-TextArea $page 'form:conversation') -match 'bonjour') 'Conversation affichee'
+    $totalApresTraduction = Read-Tokens $page
+    Assert-Check ($totalApresTraduction -gt 0) 'Tokens reels comptabilises'
 
     $page = Send-Form $page 'Nouveau chat' '' $translatorRole $translatorLabel
     Assert-Check ((Read-TextArea $page 'form:conversation') -eq '') 'Nouveau chat efface la conversation'
     Assert-Check ($page -notmatch '<select\b[^>]*id="form:rolesysteme_input"[^>]*disabled') 'Nouveau chat permet un autre role'
+    Assert-Check ((Read-Tokens $page) -eq $totalApresTraduction) 'Total conserve apres nouveau chat'
 
     $memoryRole = 'Tu es un assistant. Reponds brievement en francais et garde les informations de la conversation.'
     $page = Send-Form $page 'Envoyer la question' 'Mon prenom est Corentin. Reponds uniquement OK.' $memoryRole $memoryRole
     Assert-Check ((Read-TextArea $page 'form:reponse') -match '(?i)\bOK\b') 'Role personnalise accepte'
+    $totalApresRole = Read-Tokens $page
+    Assert-Check ($totalApresRole -gt $totalApresTraduction) 'Total cumule apres changement de role'
     $page = Send-Form $page 'Envoyer la question' 'Quel est mon prenom ? Reponds uniquement avec le prenom.' $memoryRole $memoryRole
     Assert-Check ((Read-TextArea $page 'form:reponse') -match '(?i)Corentin') 'Memoire conservee entre deux questions'
+    $totalApresMemoire = Read-Tokens $page
+    Assert-Check ($totalApresMemoire -gt $totalApresRole) 'Total cumule entre deux questions'
 
     $page = Send-Form $page 'Nouveau chat' '' $memoryRole $memoryRole
+    Assert-Check ((Read-Tokens $page) -eq $totalApresMemoire) 'Historique efface sans remettre le total a zero'
     $page = Send-Form $page 'Envoyer la question' 'Quel est mon prenom ? Si tu ne le connais pas, reponds uniquement INCONNU.' $memoryRole $memoryRole
     $answer = Read-TextArea $page 'form:reponse'
     Assert-Check ($answer -match '(?i)INCONNU' -and $answer -notmatch '(?i)Corentin') 'Nouvelle vue sans memoire du chat precedent'
+    $autreSession = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+    $autrePage = (Invoke-WebRequest -Uri $BaseUrl -WebSession $autreSession -UseBasicParsing -TimeoutSec 30).Content
+    Assert-Check ((Read-Tokens $autrePage) -eq 0) 'Compteurs isoles entre sessions'
 }
 
 Write-Host ("Termine : {0} controles reussis. Gemini : {1}." -f $results.Count, [bool]$WithGemini)

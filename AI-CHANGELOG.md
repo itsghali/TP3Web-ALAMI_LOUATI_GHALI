@@ -2,6 +2,15 @@
 
 Journal des modifications réalisées avec l’assistant. Entrées conservées, plus récentes en premier.
 
+## 2026-11-18 00:34 — Comptage des tokens pour toute la session
+
+**Scope :** feature et test
+**Files :** `llm/CompteurTokens.java` (ajouté), `llm/Assistant.java`, `llm/LlmClient.java`, `jsf/Bb.java`, `index.xhtml`, `scripts/Test-Web.ps1`, `README.md` et ce journal (modifiés ; classes sous `src/main/java/ht/ia2/alamilouati/ghali`, page sous `src/main/webapp`).
+**What :** `Assistant` retourne `Result<String>` ; le client ajoute l’usage du modèle à un accumulateur CDI `@SessionScoped`. Le backing bean expose le total en lecture seule dans la page JSF.
+**Why :** réaliser la première option du TP2 sans perdre le cumul lors d’un changement de vue ou de rôle.
+**Verified :** build et déploiement réussis ; 24 contrôles HTTP passent avec Gemini réel, dont conservation du total après nouveau chat, croissance après changement de rôle et isolation entre sessions.
+**Revert :** rétablir le retour `String`, retirer l’accumulation, l’affichage et `CompteurTokens` ; conserver les entrées du journal.
+
 ## 2026-11-18 00:00 — Validation complète du TP2 Web
 
 **Scope :** test et documentation

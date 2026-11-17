@@ -8,7 +8,9 @@ import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.google.genai.GoogleGenAiChatModel;
 import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.Result;
 import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -25,6 +27,9 @@ public class LlmClient implements Serializable {
     private String systemRole;
     private transient Assistant assistant;
     private transient ChatMemory chatMemory;
+
+    @Inject
+    private CompteurTokens compteurTokens;
 
     public LlmClient() {
         initialiserAssistant();
@@ -55,7 +60,9 @@ public class LlmClient implements Serializable {
     }
 
     public String envoyerMessage(String question) {
-        return this.assistant.chat(question);
+        Result<String> resultat = this.assistant.chat(question);
+        this.compteurTokens.ajouter(resultat.tokenUsage());
+        return resultat.content();
     }
 
     // La vue peut être sérialisée ; les objets techniques LangChain4j sont reconstruits.

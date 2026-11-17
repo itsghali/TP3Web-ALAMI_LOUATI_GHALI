@@ -2,6 +2,7 @@ package ht.ia2.alamilouati.ghali.jsf;
 
 
 import ht.ia2.alamilouati.ghali.llm.LlmClient;
+import ht.ia2.alamilouati.ghali.llm.CompteurTokens;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.model.SelectItem;
@@ -57,6 +58,13 @@ public class Bb implements Serializable {
      */
     @Inject
     private LlmClient llmClient;
+
+    @Inject
+    private CompteurTokens compteurTokens;
+
+    public long getNombreTokens() {
+        return this.compteurTokens.getTotal();
+    }
 
     /**
      * Contexte JSF. Utilisé pour qu'un message d'erreur s'affiche dans le formulaire.
