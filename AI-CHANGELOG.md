@@ -2,6 +2,15 @@
 
 Journal des modifications réalisées avec l’assistant. Entrées conservées, plus récentes en premier.
 
+## 2026-11-18 00:00 — Validation complète du TP2 Web
+
+**Scope :** test et documentation
+**Files :** `scripts/Start-Web.ps1` (ajouté), `scripts/Test-Web.ps1` (ajouté), `README.md` (ajouté), `AI-CHANGELOG.md` (complété).
+**What :** ajout d’un lancement reproductible Maven/Payara, d’un contrôle HTTP du formulaire JSF et d’un guide de lancement IntelliJ. Le mode `-WithGemini` vérifie aussi la traduction, le rôle personnalisé, la mémoire et le nouveau chat.
+**Why :** terminer la partie obligatoire du TP2 Web et rendre ses vérifications reproductibles.
+**Verified :** 16 contrôles réussis sur Payara 7.2026.9 avec Gemini réel ; lancement et 8 contrôles sans appel Gemini réussis aussi sous Windows PowerShell 5.1 ; modèle `gemini-3.5-flash-lite` confirmé par la liste des modèles de l’API. Aucun secret enregistré, `IA.md` inchangé.
+**Revert :** retirer les deux scripts et le README ; le code du chat reste celui du commit « Backing bean ».
+
 ## 2026-11-17 23:57 — Démarrage sur la page JSF
 
 **Scope :** config
